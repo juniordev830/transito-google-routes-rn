@@ -1,0 +1,14 @@
+{
+  "origem": "Centro, São Gonçalo do Amarante, RN",
+  "destino": "Alecrim, Natal, RN",
+  "fonte": "demonstracao",
+  "resposta_exemplo": {
+    "routes": [
+      {
+        "duration": "2220s",
+        "staticDuration": "1680s",
+        "distanceMeters": 18700
+      }
+    ]
+  }
+}
