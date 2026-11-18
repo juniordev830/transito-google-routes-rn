@@ -42,6 +42,7 @@ def rota(origem, destino, modo="carro", paradas=(), evitar_pedagios=False):
 
 import os
 import re
+from math import isfinite
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -71,7 +72,10 @@ def consulta_google(origem, destino, *, abrir=None):
 def segundos(duration):
     if not isinstance(duration, str) or not re.fullmatch(r"[0-9]+(?:\.[0-9]{1,9})?s", duration):
         raise ValueError("Duração ausente ou inválida na resposta.")
-    return float(duration[:-1])
+    value = float(duration[:-1])
+    if not isfinite(value):
+        raise ValueError("Duração ausente ou inválida na resposta.")
+    return value
 
 
 def run(data):
@@ -83,9 +87,16 @@ def run(data):
         resposta = data["resposta_exemplo"]
     else:
         raise ValueError("Escolha google ou demonstracao.")
-    if not resposta.get("routes"):
+    if not isinstance(resposta, dict):
+        raise ValueError("A resposta de rotas deve ser um objeto JSON.")
+    rotas = resposta.get("routes", [])
+    if not isinstance(rotas, list):
+        raise ValueError("A resposta deve conter uma lista de rotas.")
+    if not rotas:
         raise ValueError("Nenhuma rota disponível para os endereços informados.")
-    primeira = resposta["routes"][0]
+    primeira = rotas[0]
+    if not isinstance(primeira, dict):
+        raise ValueError("A primeira rota deve ser um objeto JSON.")
     duracao, estatico = segundos(primeira["duration"]), segundos(primeira["staticDuration"])
     return {"fonte": fonte, "duracao_segundos": duracao, "base_segundos": estatico,
             "diferenca_segundos": round(duracao - estatico, 9),

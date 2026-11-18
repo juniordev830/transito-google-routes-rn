@@ -9,7 +9,7 @@ class RoutesRegressionTests(unittest.TestCase):
         self.assertEqual(segundos("12.125s"), 12.125)
 
     def test_duration_rejects_invalid_values(self):
-        for value in ("", "12", "-1s", "NaNs", "1.1234567890s", None):
+        for value in ("", "12", "-1s", "NaNs", "1.1234567890s", "9" * 400 + "s", None):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     segundos(value)
@@ -41,6 +41,12 @@ class RoutesRegressionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Nenhuma rota"):
             run({"origem": "Natal", "destino": "Recife",
                  "fonte": "demonstracao", "resposta_exemplo": {"routes": []}})
+
+    def test_malformed_response_shapes_are_rejected(self):
+        for response in (None, [], {"routes": "invalid"}, {"routes": [None]}):
+            with self.subTest(response=response), self.assertRaises(ValueError):
+                run({"origem": "Natal", "destino": "Recife",
+                     "fonte": "demonstracao", "resposta_exemplo": response})
 
     def test_missing_duration_is_rejected(self):
         with self.assertRaises(KeyError):
