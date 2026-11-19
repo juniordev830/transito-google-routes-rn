@@ -28,3 +28,9 @@ Versão inicial funcional por linha de comando, sem interface web. Usa apenas a 
 ## Exportação para planilha
 
 Use `python app.py exemplo.json --csv > relatorio.csv` para exportar a duração, a distância e o efeito do trânsito. O CSV usa ponto e vírgula, conserva a ordem do relatório e inclui o cabeçalho mesmo quando a seleção está vazia. O JSON continua sendo a saída padrão.
+
+Também é possível encadear a ferramenta com outro comando usando `-` como entrada. Exemplo em um terminal Bash:
+
+```bash
+cat exemplo.json | python app.py -
+```
