@@ -55,5 +55,28 @@ class RoutesRegressionTests(unittest.TestCase):
                  "resposta_exemplo": {"routes": [{"staticDuration": "12s"}]}})
 
 
+
+
+    def test_route_rejects_oversized_and_control_character_addresses(self):
+        for origin in ("N" * 301, "Natal\nRecife", "Natal\x00Centro"):
+            with self.subTest(origin=origin), self.assertRaises(ValueError):
+                rota(origin, "Recife")
+
+    def test_google_route_validates_address_before_network_call(self):
+        from unittest.mock import Mock, patch
+        from app import consulta_google
+
+        opener = Mock()
+        with patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": "test-key"}):
+            with self.assertRaises(ValueError):
+                consulta_google("N" * 301, "Natal", abrir=opener)
+        opener.assert_not_called()
+
+    def test_run_requires_a_json_object(self):
+        for value in (None, [], "texto", 123):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "objeto JSON"):
+                run(value)
+
+
 if __name__ == "__main__":
     unittest.main()

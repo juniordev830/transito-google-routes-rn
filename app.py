@@ -1,10 +1,17 @@
 'Consulte durações de carro com e sem influência do trânsito e compare as estimativas.'
 
 
-def texto(value):
-    if not isinstance(value, str) or not value.strip():
+def texto(value, max_chars=300):
+    if not isinstance(value, str):
         raise ValueError("Use texto não vazio.")
-    return value.strip()
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError("Use texto não vazio.")
+    if len(normalized) > max_chars:
+        raise ValueError(f"Use texto com até {max_chars} caracteres.")
+    if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+        raise ValueError("O texto não pode conter caracteres de controle.")
+    return normalized
 
 
 def inteiro(value, minimo=0):
@@ -50,6 +57,7 @@ ENDPOINT = "https://routes.googleapis.com/directions/v2:computeRoutes"
 
 
 def consulta_google(origem, destino, *, abrir=None):
+    origem, destino = texto(origem), texto(destino)
     chave_api = os.environ.get("GOOGLE_MAPS_API_KEY", "").strip()
     if not chave_api:
         raise ValueError("Defina a variável GOOGLE_MAPS_API_KEY antes de consultar.")
@@ -79,6 +87,8 @@ def segundos(duration):
 
 
 def run(data):
+    if not isinstance(data, dict):
+        raise ValueError("A entrada deve ser um objeto JSON.")
     origem, destino = texto(data["origem"]), texto(data["destino"])
     fonte = texto(data["fonte"])
     if fonte == "google":
@@ -112,6 +122,8 @@ from relatorio_csv import escrever_csv
 import json
 from pathlib import Path
 
+MAX_JSON_BYTES = 1_000_000
+
 
 def objeto_sem_campos_repetidos(pares):
     objeto = {}
@@ -133,19 +145,22 @@ def main():
     args = parser.parse_args()
 
     try:
-        entrada = nullcontext(sys.stdin.buffer) if args.entrada == "-" else Path(args.entrada).open(encoding="utf-8-sig")
+        entrada = nullcontext(sys.stdin.buffer) if args.entrada == "-" else Path(args.entrada).open("rb")
         with entrada as source:
-            data = json.load(
-                source,
-                object_pairs_hook=objeto_sem_campos_repetidos,
-                parse_constant=rejeitar_constante_json,
-            )
+            raw = source.read(MAX_JSON_BYTES + 1)
+        if len(raw) > MAX_JSON_BYTES:
+            raise ValueError("JSON excede o limite de 1 MB.")
+        data = json.loads(
+            raw,
+            object_pairs_hook=objeto_sem_campos_repetidos,
+            parse_constant=rejeitar_constante_json,
+        )
         if not isinstance(data, dict):
             raise ValueError("A entrada deve ser um objeto JSON.")
         result = run(data)
     except RecursionError:
         parser.exit(2, "O JSON tem níveis de aninhamento demais.\n")
-    except (KeyError, TypeError, ValueError, OSError) as exc:
+    except (KeyError, TypeError, ValueError, UnicodeError, OSError) as exc:
         parser.exit(2, f"Erro nos dados ou na execução: {exc}\n")
 
     sys.stdout.reconfigure(encoding="utf-8", newline="\n")

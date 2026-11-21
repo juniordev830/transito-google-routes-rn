@@ -34,3 +34,5 @@ Também é possível encadear a ferramenta com outro comando usando `-` como ent
 ```bash
 cat exemplo.json | python app.py -
 ```
+
+Arquivos e entrada padrão JSON são limitados a 1 MB (1.000.000 bytes). Conteúdos maiores são rejeitados antes de consultar o Google Routes ou processar dados de demonstração.
