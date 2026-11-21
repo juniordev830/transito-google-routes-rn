@@ -58,7 +58,7 @@ class RoutesRegressionTests(unittest.TestCase):
 
 
     def test_route_rejects_oversized_and_control_character_addresses(self):
-        for origin in ("N" * 301, "Natal\\nRecife", "Natal\\x00Centro"):
+        for origin in ("N" * 301, "Natal\nRecife", "Natal\x00Centro"):
             with self.subTest(origin=origin), self.assertRaises(ValueError):
                 rota(origin, "Recife")
 
