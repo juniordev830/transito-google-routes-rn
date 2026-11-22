@@ -20,6 +20,16 @@ class RoutesRegressionTests(unittest.TestCase):
         self.assertIn("origin=Natal%2C+RN", url)
         self.assertIn("destination=S%C3%A3o+Gon%C3%A7alo", url)
 
+    def test_route_rejects_non_sequence_waypoints(self):
+        for value in ("Natal", b"Natal", None, 42):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                rota("Natal", "Recife", paradas=value)
+
+    def test_route_does_not_exhaust_unbounded_waypoint_iterators(self):
+        from itertools import repeat
+        with self.assertRaisesRegex(ValueError, "até 3 paradas"):
+            rota("Natal", "Recife", paradas=repeat("Parada"))
+
     def test_route_rejects_more_than_three_stops(self):
         with self.assertRaises(ValueError):
             rota("Natal", "Recife", paradas=("A", "B", "C", "D"))
