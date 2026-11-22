@@ -1,5 +1,7 @@
 'Consulte durações de carro com e sem influência do trânsito e compare as estimativas.'
 
+from collections.abc import Mapping, Set
+
 
 def texto(value, max_chars=300):
     if not isinstance(value, str):
@@ -34,7 +36,7 @@ def _url(acao, parametros):
 
 
 def rota(origem, destino, modo="carro", paradas=(), evitar_pedagios=False):
-    if isinstance(paradas, (str, bytes)) or paradas is None:
+    if isinstance(paradas, (str, bytes, Mapping, Set)) or paradas is None:
         raise ValueError("As paradas devem ser uma sequência de endereços.")
     try:
         from itertools import islice
@@ -43,8 +45,10 @@ def rota(origem, destino, modo="carro", paradas=(), evitar_pedagios=False):
         raise ValueError("As paradas devem ser uma sequência de endereços.") from exc
     if len(pontos) > 3 or any("|" in parada for parada in pontos):
         raise ValueError("Use até 3 paradas por link e evite o caractere |.")
-    if modo not in MODOS:
+    if not isinstance(modo, str) or modo not in MODOS:
         raise ValueError(f"Modo desconhecido: {modo}")
+    if type(evitar_pedagios) is not bool:
+        raise ValueError("evitar_pedagios deve ser verdadeiro ou falso.")
     params = {"origin": texto(origem), "destination": texto(destino), "travelmode": MODOS[modo]}
     if pontos:
         params["waypoints"] = "|".join(pontos)
