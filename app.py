@@ -114,11 +114,20 @@ def run(data):
     if not isinstance(primeira, dict):
         raise ValueError("A primeira rota deve ser um objeto JSON.")
     duracao, estatico = segundos(primeira["duration"]), segundos(primeira["staticDuration"])
-    return {"fonte": fonte, "duracao_segundos": duracao, "base_segundos": estatico,
+    resultado = {"fonte": fonte, "duracao_segundos": duracao, "base_segundos": estatico,
             "diferenca_segundos": round(duracao - estatico, 9),
             "distancia_metros": inteiro(primeira.get("distanceMeters", 0)),
             "calculo_alternativo": resposta.get("fallbackInfo"),
             "google_maps": rota(origem, destino)}
+    diagnostico = data.get("diagnostico", False)
+    if type(diagnostico) is not bool:
+        raise ValueError("diagnostico deve ser booleano.")
+    if diagnostico:
+        percentual = ((duracao - estatico) / estatico) * 100 if estatico > 0 else None
+        resultado["variacao_percentual"] = round(percentual, 2) if percentual is not None and isfinite(percentual) else None
+        resultado["duracao_minutos"] = round(duracao / 60, 2)
+        resultado["base_minutos"] = round(estatico / 60, 2)
+    return resultado
 
 
 import argparse

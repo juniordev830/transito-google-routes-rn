@@ -36,3 +36,8 @@ cat exemplo.json | python app.py -
 ```
 
 Arquivos e entrada padrão JSON são limitados a 1 MB (1.000.000 bytes). Conteúdos maiores são rejeitados antes de consultar o Google Routes ou processar dados de demonstração.
+
+
+## Novo recurso
+
+Com `diagnostico: true`, inclui duração e base em minutos e variação percentual relativa à duração estática retornada pelo provedor. Se a base for zero ou a razão não representável, o percentual é nulo. Não cria estimativas próprias.
