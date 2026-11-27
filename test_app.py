@@ -48,6 +48,7 @@ class ProjetoTest(unittest.TestCase):
             self.assertEqual(request.get_method(), "POST")
             self.assertEqual(timeout, 15)
             self.assertEqual(request.get_header("X-goog-api-key"), "teste")
+            self.assertNotIn("X-goog-api-key", request.headers)
             body = json.loads(request.data)
             self.assertEqual(body["routingPreference"], "TRAFFIC_AWARE")
             self.assertEqual(body["origin"]["address"], "Natal, RN")
@@ -55,6 +56,20 @@ class ProjetoTest(unittest.TestCase):
 
         with patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": "teste"}):
             self.assertEqual(consulta_google("Natal, RN", "Macau, RN", abrir=abrir), {"routes": []})
+
+    def test_leitura_da_resposta_tem_limite(self):
+        from io import BytesIO
+        from unittest.mock import patch
+        from app import consulta_google, MAX_RESPOSTA_BYTES
+
+        class RespostaLimitada(BytesIO):
+            def read(resposta, tamanho=-1):
+                self.assertEqual(tamanho, MAX_RESPOSTA_BYTES + 1)
+                return super(RespostaLimitada, resposta).read(tamanho)
+
+        with patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": "teste"}):
+            with self.assertRaisesRegex(ValueError, "excede 1 MB"):
+                consulta_google("Natal", "Macau", abrir=lambda *a, **kw: RespostaLimitada(b" " * (MAX_RESPOSTA_BYTES + 1)))
 
     def test_sem_chave_nao_faz_chamada(self):
         from app import consulta_google
