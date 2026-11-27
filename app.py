@@ -59,6 +59,7 @@ from math import isfinite
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+MAX_RESPOSTA_BYTES = 1_000_000
 ENDPOINT = "https://routes.googleapis.com/directions/v2:computeRoutes"
 
 
@@ -72,11 +73,14 @@ def consulta_google(origem, destino, *, abrir=None):
                "languageCode": "pt-BR", "regionCode": "BR"}
     request = Request(ENDPOINT, data=json.dumps(payload).encode("utf-8"), method="POST",
                       headers={"Content-Type": "application/json",
-                               "X-Goog-Api-Key": chave_api,
                                "X-Goog-FieldMask": "routes.duration,routes.staticDuration,routes.distanceMeters,fallbackInfo"})
+    request.add_unredirected_header("X-Goog-Api-Key", chave_api)
     try:
         with (abrir or urlopen)(request, timeout=15) as resposta:
-            return json.load(resposta)
+            corpo = resposta.read(MAX_RESPOSTA_BYTES + 1)
+            if len(corpo) > MAX_RESPOSTA_BYTES:
+                raise ValueError("A resposta do Google Routes excede 1 MB.")
+            return json.loads(corpo)
     except HTTPError as exc:
         raise ValueError(f"Google Routes respondeu HTTP {exc.code}.") from None
     except (URLError, TimeoutError):
