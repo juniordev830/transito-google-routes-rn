@@ -1,5 +1,7 @@
 # Estimativas de trânsito com Google Routes
 
+**Navegação** · [Rodar](#rodar) · [Uso](#uso) · [Google Maps](#google-maps) · [Código e estudo](docs/ENGENHARIA_REVERSA.md)
+
 Consulte durações de carro com e sem influência do trânsito e compare as estimativas.
 
 ## Rodar
@@ -36,3 +38,9 @@ cat exemplo.json | python app.py -
 ```
 
 Arquivos e entrada padrão JSON são limitados a 1 MB (1.000.000 bytes). Conteúdos maiores são rejeitados antes de consultar o Google Routes ou processar dados de demonstração.
+
+## Código e roteiro de estudo
+
+Como testar a interpretação das respostas sem depender da API externa ou de uma credencial? O [guia de engenharia reversa](docs/ENGENHARIA_REVERSA.md) reúne o mapa dos módulos e uma pergunta técnica baseada no projeto.
+
+Mantido por [João Junior](https://github.com/juniordev830).
